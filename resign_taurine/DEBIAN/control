@@ -1,0 +1,12 @@
+Package: com.odysseyteam.taurine
+Version: 1.1.3-1
+Section: Utilities
+Architecture: iphoneos-arm
+Depends: firmware (>=14.0)
+Installed-Size: 37840
+Maintainer: zhuowei <zhuowei@worthdoingbadly.com>
+Description: Taurine resigned with Linus Henze's CoreTrust bypass so it doesn't expire
+Homepage: https://taurine.app/
+Name: Taurine
+Author: Odyssey Team
+Tags: compatible_min::ios14.0

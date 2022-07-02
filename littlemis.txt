@@ -1,0 +1,54 @@
+struct ThePath {
+    struct Certificate* certificate; // 0
+    struct X509Policy* policy; // 0x18
+}
+struct Certificate {
+    CTAsn1Item certificate_data; // 0x10
+    // 0x20
+    CTAsn1Item certificate_signature_algorithm; // 0x28 - OID
+    CTAsn1Item certificate_signature; // 0x38
+    // 0x48
+    CTAsn1Item subject; // 0x68
+    CTAsn1Item issuer; // 0x78
+    // 0x88
+    CTAsn1Item other_signature_algorithm;// 0x98 - some other signature algorithm?
+    CTAsn1Item authorityKeyIdentifier; // 0xa8
+    CTAsn1Item subjectKeyIdentifier; // 0xb8; used when_bvar1_is_false
+    // 0xc8
+    uint64_t policy_flags; // 0xf0 - see X509PolicySetFlagsForRoots
+    struct Certificate* next; // 0x120
+};
+
+struct X509Policy {
+    long expected_number_of_certs; // 0x0
+    long somethingelse; // what? 0x8
+    bool check_apple_root_cas_in_addition_to_mfi; // 0x10 - forced to true in CTEvaluateAMFICodeSignatureCMS_MaxDigestType
+    bool allow_test_hierarchy; // 0x11
+    bool validate_that_our_hardcoded_root_is_still_valid; // 0x12
+    CTAsn1Item* root_public_key; // 0x18
+    CTAsn1Item* root_ec_public_key; // 0x20
+    CTAsn1Item* root_signature_oid; // 0x28
+    CTAsn1Item* something_usually_null_octet; // 0x30
+}
+uint64_t X509ChainCheckPathWithOptions(uint32_t arg1, ThePath* the_path, X509Policy* policy, int options);
+
+uint64_t X509CertificateCheckSignature(uint32_t arg1, struct Certificate* next_cert, CTAsn1Item* certificate, CTAsn1Item* certificate_signature_algorithm, CTAsn1Item* certificate_signature)
+
+uint64_t X509CertificateCheckSignatureWithPublicKey(root_public_key, root_ec_public_key, root_signature_oid, );
+error:
+0x90006: not enough certs
+0x90008: cert is not signed with another cert
+0x9000b: root cert isn't apple at all actually
+0x9000c: root isn't a real apple root cert - this is new
+
+bvar1 = has apple root?
+
+
+2022-05-21 19:07:40.949 ct_little[52285:1444517] result = 0 leaf_certificate = 0x7f92ac80912f leaf_certificate_length = 5b6 policy_flags = 20 cms_digest_type = 4 hash_agility_digest_type = 4 digest_data = 0x7f92ac809812 digest_length = 20
+2022-05-21 19:45:54.412 ct_little[54721:1461797] result = 0 leaf_certificate = 0x7fc0ec80d268 leaf_certificate_length = 32a policy_flags = 0 cms_digest_type = 4 hash_agility_digest_type = 4 digest_data = 0x7fc0ec80d66f digest_length = 20
+
+So it does:
+X509CertificateCheckSignature(29, apple_dev_cert, &mozilla_cert->certificate_data, &mozilla_cert->certificate_signature_algorithm, &mozilla_cert->certificate_signature)
+X509CertificateCheckSignature(29, apple_root_cert, &apple_dev_cert->certificate_data, &apple_dev_cert->certificate_signature_algorithm, &apple_dev_cert->certificate_signature)
+X509CertificateCheckSignature(29, apple_root_cert, &apple_root_cert->certificate_data, &apple_root_cert->certificate_signature_algorithm, &apple_root_cert->certificate_signature)
+X509CertificateCheckSignature(29, NULL, &apple_root_cert->certificate_data, &apple_root_cert->certificate_signature_algorithm, &apple_root_cert->certificate_signature)
